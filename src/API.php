@@ -5,25 +5,28 @@ namespace dnj\phpvmomi;
 use dnj\phpvmomi\DataObjects\ManagedObjectReference;
 use dnj\phpvmomi\DataObjects\ServiceContent;
 use dnj\phpvmomi\Exceptions\MissingOptionException;
+use dnj\phpvmomi\ManagedObjects\FileManager;
+use dnj\phpvmomi\ManagedObjects\GuestOperationsManager;
 use dnj\phpvmomi\ManagedObjects\ManagedEntity;
 use dnj\phpvmomi\ManagedObjects\PropertyCollector;
 use dnj\phpvmomi\ManagedObjects\ServiceInstance;
 use dnj\phpvmomi\ManagedObjects\SessionManager;
 use dnj\phpvmomi\ManagedObjects\ViewManager;
+use dnj\phpvmomi\ManagedObjects\VirtualDiskManager;
 
 /**
- * @method \dnj\phpvmomi\ManagedObjects\SessionManager         getSessionManager()
- * @method \dnj\phpvmomi\ManagedObjects\PropertyCollector      getPropertyCollector()
- * @method \dnj\phpvmomi\ManagedObjects\FileManager            getFileManager()
- * @method \dnj\phpvmomi\ManagedObjects\VirtualDiskManager     getVirtualDiskManager()
- * @method \dnj\phpvmomi\ManagedObjects\GuestOperationsManager getGuestOperationsManager()
+ * @method SessionManager         getSessionManager()
+ * @method PropertyCollector      getPropertyCollector()
+ * @method FileManager            getFileManager()
+ * @method VirtualDiskManager     getVirtualDiskManager()
+ * @method GuestOperationsManager getGuestOperationsManager()
  */
 class API
 {
     /**
      * @var array<string, mixed>
      */
-    protected $options = [
+    protected array $options = [
         'sdk' => '',
         'datastore-browser' => '',
         'username' => '',
@@ -37,16 +40,21 @@ class API
     protected ?SoapClient $client = null;
     protected ?ServiceInstance $serviceInstance = null;
     protected array $managedObjectsCache = [];
-
-    /**
-     * @param array<string,mixed> $options
-     */
+ 
+ /**
+  * @param array<string,mixed> $options
+  *
+  * @throws MissingOptionException
+  */
     public function __construct(array $options)
     {
         $this->options = array_replace($this->options, $options);
 
         if (!$this->options['sdk']) {
             throw new MissingOptionException('sdk');
+        }
+        if (!str_ends_with($this -> options['sdk'], "/")) {
+           $this -> options['sdk'] = $this -> options['sdk'] . "/";
         }
         if (!$this->options['username']) {
             throw new MissingOptionException('username');
@@ -61,22 +69,21 @@ class API
             $this->login();
         }
     }
-
-    /**
-     * @param array<mixed> $arguments
-     *
-     * @return ManagedEntity
-     */
+ 
+ /**
+  * @return ManagedEntity
+  * @throws Exception
+  */
     public function __call(string $name, array $arguments)
     {
-        if (strlen($name) <= 3 or 'get' != substr($name, 0, 3)) {
-            throw new Exception('Call to undefined method '.__CLASS__."::{$name}");
+        if (strlen($name) <= 3 or !str_starts_with($name, 'get')) {
+            throw new Exception('Call to undefined method '.__CLASS__."::$name");
         }
         $className = substr($name, 3);
         $property = lcfirst($className);
         $content = $this->getServiceContent();
         if (!isset($content->{$property})) {
-            throw new Exception('Call to undefined method '.__CLASS__."::{$name}");
+            throw new Exception('Call to undefined method '.__CLASS__."::$name");
         }
         $result = $content->{$property};
 
@@ -94,8 +101,7 @@ class API
      *
      * @return array|mixed|null
      */
-    public function getOption(?string $name = null)
-    {
+    public function getOption(?string $name = null): mixed {
         return $name ? ($this->options[$name] ?? null) : $this->options;
     }
 
@@ -186,8 +192,11 @@ class API
     {
         return $this->managedObjectsCache[$type.'-'.$id] ?? null;
     }
-
-    public function addToManagedObjectCache(?ManagedEntity $obj, ?string $type = null, ?string $id = null): void
+ 
+ /**
+  * @throws Exception
+  */
+ public function addToManagedObjectCache(?ManagedEntity $obj, ?string $type = null, ?string $id = null): void
     {
         if (null === $obj and (null === $type or null === $id)) {
             throw new Exception('need type and id for deleting from cache');

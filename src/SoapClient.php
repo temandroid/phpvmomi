@@ -6,11 +6,10 @@ use dnj\phpvmomi\DataObjects\DynamicData;
 
 class SoapClient extends \SoapClient
 {
-    public function __call($function_name, $arguments)
-    {
-        $arguments = self::checkForDynamicData($arguments);
-
-        return parent::__call($function_name, $arguments);
+    #[\ReturnTypeWillChange]
+    public function __call($name, $args) {
+        $args = self ::checkForDynamicData($args);
+        return $this -> __soapCall($name, $args);
     }
 
     private static function checkForDynamicData($arguments)
