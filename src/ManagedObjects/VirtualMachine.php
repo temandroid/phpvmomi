@@ -18,7 +18,7 @@ use dnj\phpvmomi\DataObjects\VirtualMachineSummary;
 class VirtualMachine extends ManagedEntity
 {
     use actions\VirtualMachineTrait;
-
+    
     /**
      * @var VirtualMachineRuntimeInfo
      */
@@ -53,6 +53,26 @@ class VirtualMachine extends ManagedEntity
      * @var ManagedObjectReference|null
      */
     public $resourcePool;
+    
+    public $capability;
+    public $configStatus;
+    public $customValue;
+    public $declaredAlarmState;
+    public $disabledMethod;
+    public $effectiveRole;
+    public $environmentBrowser;
+    public $guestHeartbeatStatus;
+    public $layout;
+    public $layoutEx;
+    public $network;
+    public $overallStatus;
+    public $permission;
+    public $recentTask;
+    public $resourceConfig;
+    public $rootSnapshot;
+    public $storage;
+    public $tag;
+    public $triggeredAlarmState;
 
     /**
      * @todo Move to right place

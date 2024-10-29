@@ -8,4 +8,5 @@ namespace dnj\phpvmomi\DataObjects;
 class LatencySensitivity
 {
     public const NORMAL = 'normal';
+    public $level;
 }
