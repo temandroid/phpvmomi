@@ -73,6 +73,7 @@ class VirtualMachine extends ManagedEntity
     public $storage;
     public $tag;
     public $triggeredAlarmState;
+    public $snapshot;
 
     /**
      * @todo Move to right place
